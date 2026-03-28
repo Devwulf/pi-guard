@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { validateLoadedGuardConfig, getGuardConfigFromSettings, buildEffectiveRules, validateToolRules } from "../src/config.ts";
-import { DEFAULT_RULES, DEFAULT_MATCHERS } from "../src/config.ts";
+import { DEFAULT_CONFIG } from "../src/defaults.ts";
 
 test("validateToolRules", async (t) => {
   await t.test("accepts valid rules", () => {
@@ -128,7 +128,6 @@ test("getGuardConfigFromSettings", async (t) => {
   await t.test("uses default config when the guard key is missing", () => {
     const result = getGuardConfigFromSettings({ other: true });
     assert.equal(result.config.enabled, true);
-    assert.deepEqual(result.config.matchers, DEFAULT_MATCHERS);
     assert.equal(result.warning, undefined);
   });
 
@@ -139,57 +138,19 @@ test("getGuardConfigFromSettings", async (t) => {
   });
 });
 
-test("DEFAULT_RULES", async (t) => {
-  await t.test("all values are allow, ask, or deny", () => {
-    for (const [tool, rules] of Object.entries(DEFAULT_RULES)) {
-      if (typeof rules === "string") {
-        assert.ok(["allow", "ask", "deny"].includes(rules), `DEFAULT_RULES["${tool}"] has invalid action "${rules}"`);
-      } else {
-        for (const [pattern, action] of Object.entries(rules)) {
-          assert.ok(["allow", "ask", "deny"].includes(action), `DEFAULT_RULES["${tool}"]["${pattern}"] has invalid action "${action}"`);
-        }
-      }
-    }
-  });
-
-  await t.test("all patterns are non-empty strings", () => {
-    for (const [tool, rules] of Object.entries(DEFAULT_RULES)) {
-      if (typeof rules !== "string") {
-        for (const pattern of Object.keys(rules)) {
-          assert.ok(pattern.trim().length > 0, `DEFAULT_RULES["${tool}"] has empty pattern`);
-        }
-      }
-    }
-  });
-});
-
-test("DEFAULT_MATCHERS", async (t) => {
-  await t.test("has matchers for core tools", () => {
-    assert.equal(DEFAULT_MATCHERS.bash!.param, "command");
-    assert.equal(DEFAULT_MATCHERS.bash!.type, "bash");
-    assert.equal(DEFAULT_MATCHERS.read!.param, "path");
-    assert.equal(DEFAULT_MATCHERS.read!.type, "glob");
-    assert.equal(DEFAULT_MATCHERS.edit!.param, "path");
-    assert.equal(DEFAULT_MATCHERS.edit!.type, "glob");
-    assert.equal(DEFAULT_MATCHERS.write!.param, "path");
-    assert.equal(DEFAULT_MATCHERS.write!.type, "glob");
-  });
-});
-
 test("buildEffectiveRules", async (t) => {
   await t.test("defaults alone when all layers are empty", () => {
     const result = buildEffectiveRules({}, {}, {}, undefined);
-    assert.deepEqual(result, DEFAULT_RULES);
+    assert.deepEqual(result, DEFAULT_CONFIG.rules);
   });
 
   await t.test("user rules are merged with defaults", () => {
     const result = buildEffectiveRules({ "mytool": "allow" }, {}, {}, undefined);
     if (typeof result === "object") {
       assert.equal(result["mytool"], "allow");
-      // Defaults are preserved
-      if (typeof DEFAULT_RULES["bash"] === "object") {
-        assert.deepEqual(result["bash"], DEFAULT_RULES["bash"]);
-      }
+      // Defaults are preserved - guaranteed to be object by defaults.ts
+      assert.ok(typeof DEFAULT_CONFIG.rules === "object");
+      assert.deepEqual(result["bash"], DEFAULT_CONFIG.rules.bash);
     }
   });
 

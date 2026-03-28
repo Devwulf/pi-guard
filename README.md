@@ -4,21 +4,16 @@ General-purpose permission system for pi tools. Handles permissions for bash and
 
 ## Overview
 
-pi-guard intercepts tool calls and checks them against permission rules before execution. Tools have **matchers** that define how to extract and match input, and **rules** that define what's allowed.
+pi-guard intercepts tool calls and checks them against permission rules before execution.
 
-Built-in matchers for `bash`, `read`, `edit`, and `write`. Other tools can be guarded by configuring matchers in settings.
+**rules** define what's allowed. **matchers** define how to match tool calls to rules.
+
+Built-in matchers for `bash`, `read`, `write`, and `edit`. Other tools can be guarded by configuring matchers in settings.
 
 ## Installation
 
 ```bash
-npm install pi-guard
-```
-
-Add to your `~/.pi/agent/extensions/pi-guard.ts`:
-
-```typescript
-import guard from "pi-guard";
-export default [guard];
+pi install npm:pi-guard
 ```
 
 ## Configuration
@@ -30,31 +25,32 @@ Configure in `~/.pi/agent/settings.json`:
   "guard": {
     "enabled": true,
     "matchers": {
-      "webfetch": { "param": "url", "type": "glob" },
-      "spawn": { "param": "agent", "type": "exact" }
+      "spawn": { "param": "agent", "type": "exact" },
+      "webfetch": { "param": "url", "type": "glob" }
     },
     "rules": {
       "*": "ask",
       "bash": {
         "*": "ask",
-        "git *": "allow",
-        "rm *": "deny"
+        "git status": "allow",
+        "git log": "allow",
+        "rm": "deny"
       },
       "read": {
         "*": "allow",
         "*.env": "deny",
         "*.pem": "deny"
       },
-      "edit": { "*": "ask" },
       "write": { "*": "ask" },
-      "webfetch": {
-        "*": "ask",
-        "https://github.com/*": "allow"
-      },
+      "edit": { "*": "ask" },
       "spawn": {
         "build": "allow",
         "test": "allow",
         "*": "deny"
+      },
+      "webfetch": {
+        "*": "ask",
+        "https://github.com/*": "allow"
       }
     }
   }
@@ -70,7 +66,7 @@ Disable all checks:
 
 Whole-tool action (no pattern matching needed):
 ```json
-{ "guard": { "rules": { "bash": "allow" } } }
+{ "guard": { "rules": { "write": "allow" } } }
 ```
 
 ### Environment Variable
@@ -83,14 +79,7 @@ PI_GUARD='{"*":"deny","bash":{"git diff":"allow"}}'
 
 ## Matchers
 
-Matchers define how to extract and match input from a tool call:
-
-```typescript
-interface Matcher {
-  param: string;                      // Tool parameter to extract
-  type: "bash" | "glob" | "exact";    // How to match
-}
-```
+Matchers define how to extract and match input from a tool call. Each matcher has a `param` (which tool parameter to extract) and a `type` (how to match).
 
 | Type | Description | Use case |
 |------|-------------|----------|
@@ -134,7 +123,9 @@ DEFAULT_CONFIG → user config → project config → PI_GUARD → session rules
 ```json
 "bash": {
   "*": "ask",
-  "git *": "allow"
+  "git status": "allow",
+  "git log": "allow",
+  "rm": "deny"
 }
 ```
 
@@ -145,6 +136,25 @@ Each permission rule resolves to one of:
 - `"ask"` — prompt for approval (or block in non-interactive mode)
 - `"deny"` — block the action
 
+## Default Rules
+
+See [src/defaults.ts](src/defaults.ts) for the built-in default rules.
+
+The defaults follow a simple principle: **reading is safe, writing is dangerous**. Bash commands that only read (ls, cat, git log) are allowed, while anything that modifies state asks for approval. File reads are mostly allowed except for sensitive patterns (*.env, *.pem). All edits and writes require approval since they change the codebase.
+
+To trust the agent with file modifications (useful in containers or trusted environments), allow all edits and writes:
+
+```json
+{
+  "guard": {
+    "rules": {
+      "edit": "allow",
+      "write": "allow"
+    }
+  }
+}
+```
+
 ## Commands
 
 ### `/guard`
@@ -154,38 +164,6 @@ Manage pi-guard security settings.
 ```
 /guard toggle    # Enable/disable guard
 /guard list      # Show current rules
-```
-
-## Default Rules
-
-```typescript
-{
-  bash: {
-    "*": "ask",
-    cat: "allow",
-    cd: "allow",
-    echo: "allow",
-    find: "allow",
-    grep: "allow",
-    head: "allow",
-    ls: "allow",
-    pwd: "allow",
-    rg: "allow",
-    "git blame": "allow",
-    "git branch --show-current": "allow",
-    "git diff": "allow",
-    "git log": "allow",
-    "git show": "allow",
-    "git status": "allow",
-  },
-  read: {
-    "*": "allow",
-    "*.env": "deny",
-    "*.pem": "deny",
-  },
-  edit: { "*": "ask" },
-  write: { "*": "ask" },
-}
 ```
 
 ## License

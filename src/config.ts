@@ -2,56 +2,10 @@ import * as fs from "node:fs";
 import * as path from "node:path";
 import * as os from "node:os";
 import type { GuardConfig, Matchers, Action, ToolRules, Rules } from "./types.ts";
+import { DEFAULT_CONFIG } from "./defaults.ts";
 
 const AGENT_DIR = path.join(os.homedir(), ".pi", "agent");
 const SETTINGS_PATH = path.join(AGENT_DIR, "settings.json");
-
-/** Built-in matchers for core tools. */
-export const DEFAULT_MATCHERS: Matchers = {
-  bash: { param: "command", type: "bash" },
-  read: { param: "path", type: "glob" },
-  edit: { param: "path", type: "glob" },
-  write: { param: "path", type: "glob" },
-};
-
-/** Default rules - permissive for reading, restrictive for writing. */
-export const DEFAULT_RULES: Record<string, ToolRules> = {
-  bash: {
-    "*": "ask",
-    cat: "allow",
-    cd: "allow",
-    echo: "allow",
-    find: "allow",
-    grep: "allow",
-    head: "allow",
-    ls: "allow",
-    pwd: "allow",
-    rg: "allow",
-    "git blame": "allow",
-    "git branch --show-current": "allow",
-    "git diff": "allow",
-    "git log": "allow",
-    "git show": "allow",
-    "git status": "allow",
-  },
-  read: {
-    "*": "allow",
-    "*.env": "deny",
-    "*.pem": "deny",
-  },
-  edit: {
-    "*": "ask",
-  },
-  write: {
-    "*": "ask",
-  },
-};
-
-const DEFAULT_CONFIG: GuardConfig = {
-  enabled: true,
-  matchers: DEFAULT_MATCHERS,
-  rules: DEFAULT_RULES,
-};
 
 const SAFE_FALLBACK_CONFIG: GuardConfig = {
   enabled: true,
@@ -79,7 +33,8 @@ export function buildEffectiveRules(
   }
 
   // Merge object-based rules
-  const merged: Record<string, ToolRules> = { ...DEFAULT_RULES };
+  const defaultRules = typeof DEFAULT_CONFIG.rules === "string" ? {} : DEFAULT_CONFIG.rules;
+  const merged: Record<string, ToolRules> = { ...defaultRules };
 
   for (const layer of [userRules, projectRules, sessionRules, envRules]) {
     if (!layer || typeof layer === "string") continue;
@@ -151,7 +106,7 @@ export function validateLoadedGuardConfig(input: unknown): LoadedConfigResult {
     warnings.push("enabled must be a boolean");
   }
 
-  let matchers: Matchers | undefined = DEFAULT_MATCHERS;
+  let matchers: Matchers = DEFAULT_CONFIG.matchers!;
   if (cfg.matchers !== undefined) {
     if (cfg.matchers && typeof cfg.matchers === "object" && !Array.isArray(cfg.matchers)) {
       const validMatchers: Matchers = {};
