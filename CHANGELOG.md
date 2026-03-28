@@ -1,0 +1,24 @@
+# Changelog
+
+All notable changes to this project will be documented in this file.
+
+## [1.0.0] - 2026-03-28
+
+### Added
+
+- General-purpose permission system for pi tools, replacing `pi-unbash`.
+- Built-in matchers for core tools:
+  - `bash` — Parses commands with unbash AST parser, extracts all commands, uses subsequence matching. Rule tokens must appear in order but extra flags/arguments are permitted. Example: `"git log"` matches `git log`, `git log --oneline`, `git log --oneline -10`.
+  - `glob` — Standard glob matching with `*` and `**` support, `?` for single character, and `~` home directory expansion. For file paths, URLs, etc.
+  - `exact` — Simple string equality for enum values, agent names, etc.
+- Extensible matchers via configuration — add permission checking for any tool by defining a `param` and `type` in settings.
+- Three permission actions: `allow` (run without approval), `ask` (prompt user), `deny` (block the action).
+- Rule precedence in merge order: `DEFAULT_CONFIG → user config → project config → PI_GUARD → session rules`. Last match wins within each layer.
+- `PI_GUARD` environment variable for injecting rules from outside (e.g., CI/CD, pi-spawn).
+- Project-level settings from `.pi/settings.json` — share team rules via version control.
+- `/guard toggle` — Enable or disable the guard system.
+- `/guard list` — Display current configuration including all rule layers.
+- Session-scoped approvals — "Always allow X (this session)" option in approval prompts without persisting to disk.
+- Comprehensive bash command extraction — handles pipes, subshells, command substitutions, process substitutions, redirects, heredocs, arithmetic expansions, and control flow structures (`if`, `while`, `for`, `case`, functions).
+- Smart command display — path-aware elision for long paths, preserves original quoting, handles heredocs and redirects.
+- Block messages for user rejection vs security policy vs non-interactive mode.
