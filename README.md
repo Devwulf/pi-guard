@@ -159,7 +159,7 @@ To trust the agent with file modifications (useful in containers or trusted envi
 
 Profiles let you define named rule overlays that can be activated during a session. This is useful for switching between permission modes without editing config. Only one profile can be active at a time — activating a new one replaces the previous.
 
-Profiles are layered between env (`PI_GUARD`) and session rules in the precedence chain. Rules are merged per-pattern (last match wins), so a profile with `"*": "allow"` makes earlier `*` rules irrelevant, but specific rules from earlier layers (like `"rm": "deny"`) still apply unless the profile has its own pattern for them.
+Profiles are layered between env (`PI_GUARD`) and session rules in the precedence chain. Rules are merged in layer order with last-match-wins semantics, so a profile with `"*": "allow"` will override any specific rules from earlier layers (like `"rm": "deny"`) — `"*"` always matches last and wins.
 
 For example, define a profile that allows writes so you can switch to it when you want to make changes:
 
