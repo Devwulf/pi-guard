@@ -18,139 +18,156 @@ export const FORMAT_COMMAND_DEFAULT_ARG_MAX_LENGTH = 40;
  * If the total result still exceeds maxLength, it is hard-truncated with "…".
  */
 export function formatCommand(
-  cmd: CommandRef,
-  options?: { maxLength?: number; argMaxLength?: number },
+	cmd: CommandRef,
+	options?: { maxLength?: number; argMaxLength?: number },
 ): string {
-  const maxLength = options?.maxLength ?? FORMAT_COMMAND_DEFAULT_MAX_LENGTH;
-  const argMaxLength = options?.argMaxLength ?? FORMAT_COMMAND_DEFAULT_ARG_MAX_LENGTH;
+	const maxLength = options?.maxLength ?? FORMAT_COMMAND_DEFAULT_MAX_LENGTH;
+	const argMaxLength =
+		options?.argMaxLength ?? FORMAT_COMMAND_DEFAULT_ARG_MAX_LENGTH;
 
-  const name = displayWord(cmd.node.name, cmd.source).replace(/\n/g, "↵");
-  const tokenSpecs = [
-    ...cmd.node.suffix.map(arg => {
-      const full = displayWord(arg, cmd.source).replace(/\n/g, "↵");
-      return makeTokenSpec(full, argMaxLength);
-    }),
-    ...cmd.node.redirects
-      .filter(redirect => !isRenderableHeredoc(redirect))
-      .map(redirect => {
-        const full = renderRedirect(redirect, cmd.source).replace(/\n/g, "↵");
-        return makeTokenSpec(full, argMaxLength);
-      }),
-    ...cmd.node.redirects
-      .filter(isRenderableHeredoc)
-      .map(redirect => {
-        const full = renderFullHeredoc(redirect, cmd.source);
-        const min = renderElidedHeredoc(redirect, cmd.source, argMaxLength);
-        return makeTokenSpec(full, argMaxLength, min);
-      }),
-  ];
+	const name = displayWord(cmd.node.name, cmd.source).replace(/\n/g, "↵");
+	const tokenSpecs = [
+		...cmd.node.suffix.map((arg) => {
+			const full = displayWord(arg, cmd.source).replace(/\n/g, "↵");
+			return makeTokenSpec(full, argMaxLength);
+		}),
+		...cmd.node.redirects
+			.filter((redirect) => !isRenderableHeredoc(redirect))
+			.map((redirect) => {
+				const full = renderRedirect(redirect, cmd.source).replace(/\n/g, "↵");
+				return makeTokenSpec(full, argMaxLength);
+			}),
+		...cmd.node.redirects.filter(isRenderableHeredoc).map((redirect) => {
+			const full = renderFullHeredoc(redirect, cmd.source);
+			const min = renderElidedHeredoc(redirect, cmd.source, argMaxLength);
+			return makeTokenSpec(full, argMaxLength, min);
+		}),
+	];
 
-  const fullDisplay = [name, ...tokenSpecs.map(spec => spec.full)].join(" ");
-  if (fullDisplay.length <= maxLength) return fullDisplay;
+	const fullDisplay = [name, ...tokenSpecs.map((spec) => spec.full)].join(" ");
+	if (fullDisplay.length <= maxLength) return fullDisplay;
 
-  const tokens = tokenSpecs.map(spec => spec.full);
-  let overflow = fullDisplay.length - maxLength;
+	const tokens = tokenSpecs.map((spec) => spec.full);
+	let overflow = fullDisplay.length - maxLength;
 
-  for (let i = tokenSpecs.length - 1; i >= 0 && overflow > 0; i--) {
-    const spec = tokenSpecs[i]!;
-    const current = tokens[i]!;
-    const maxShrink = current.length - spec.min.length;
-    if (maxShrink <= 0) continue;
+	for (let i = tokenSpecs.length - 1; i >= 0 && overflow > 0; i--) {
+		const spec = tokenSpecs[i]!;
+		const current = tokens[i]!;
+		const maxShrink = current.length - spec.min.length;
+		if (maxShrink <= 0) continue;
 
-    const nextTargetLength = current.length - Math.min(maxShrink, overflow);
-    const shrunk = spec.shrink(nextTargetLength);
-    tokens[i] = shrunk;
-    overflow -= current.length - shrunk.length;
-  }
+		const nextTargetLength = current.length - Math.min(maxShrink, overflow);
+		const shrunk = spec.shrink(nextTargetLength);
+		tokens[i] = shrunk;
+		overflow -= current.length - shrunk.length;
+	}
 
-  let display = [name, ...tokens].join(" ");
-  if (display.length > maxLength) {
-    display = display.slice(0, maxLength - 1) + "…";
-  }
+	let display = [name, ...tokens].join(" ");
+	if (display.length > maxLength) {
+		display = `${display.slice(0, maxLength - 1)}…`;
+	}
 
-  return display;
+	return display;
 }
 
 function isRenderableHeredoc(redirect: Redirect): boolean {
-  return (redirect.operator === "<<" || redirect.operator === "<<-") && redirect.content != null;
+	return (
+		(redirect.operator === "<<" || redirect.operator === "<<-") &&
+		redirect.content != null
+	);
 }
 
 function renderRedirect(redirect: Redirect, source: string): string {
-  const prefix = redirectPrefix(redirect);
-  const target = redirect.target ? displayWord(redirect.target, source) : "";
-  return `${prefix}${target}`;
+	const prefix = redirectPrefix(redirect);
+	const target = redirect.target ? displayWord(redirect.target, source) : "";
+	return `${prefix}${target}`;
 }
 
 function renderFullHeredoc(redirect: Redirect, source: string): string {
-  const prefix = `${redirectPrefix(redirect)}${heredocTargetDisplay(redirect, source)}↵`;
-  return prefix + (redirect.content ?? "").replace(/\n/g, "↵") + heredocMarker(redirect, source);
+	const prefix = `${redirectPrefix(redirect)}${heredocTargetDisplay(redirect, source)}↵`;
+	return (
+		prefix +
+		(redirect.content ?? "").replace(/\n/g, "↵") +
+		heredocMarker(redirect, source)
+	);
 }
 
-function renderElidedHeredoc(redirect: Redirect, source: string, argMaxLength: number): string {
-  const prefix = `${redirectPrefix(redirect)}${heredocTargetDisplay(redirect, source)}↵`;
-  const content = (redirect.content ?? "").replace(/\n/g, "↵");
-  const full = content + heredocMarker(redirect, source);
+function renderElidedHeredoc(
+	redirect: Redirect,
+	source: string,
+	argMaxLength: number,
+): string {
+	const prefix = `${redirectPrefix(redirect)}${heredocTargetDisplay(redirect, source)}↵`;
+	const content = (redirect.content ?? "").replace(/\n/g, "↵");
+	const full = content + heredocMarker(redirect, source);
 
-  if (full.length <= argMaxLength) {
-    return prefix + full;
-  }
+	if (full.length <= argMaxLength) {
+		return prefix + full;
+	}
 
-  return prefix + content.slice(0, argMaxLength) + "…";
+	return `${prefix + content.slice(0, argMaxLength)}…`;
 }
 
 function redirectPrefix(redirect: Redirect): string {
-  const fd = redirect.fileDescriptor != null ? String(redirect.fileDescriptor) : "";
-  const variableName = redirect.variableName ? `{${redirect.variableName}}` : "";
-  return `${fd}${variableName}${redirect.operator}`;
+	const fd =
+		redirect.fileDescriptor != null ? String(redirect.fileDescriptor) : "";
+	const variableName = redirect.variableName
+		? `{${redirect.variableName}}`
+		: "";
+	return `${fd}${variableName}${redirect.operator}`;
 }
 
 function heredocTargetDisplay(redirect: Redirect, source: string): string {
-  const marker = rawHeredocMarker(redirect, source);
-  return redirect.heredocQuoted ? `'${marker}'` : marker;
+	const marker = rawHeredocMarker(redirect, source);
+	return redirect.heredocQuoted ? `'${marker}'` : marker;
 }
 
 function heredocMarker(redirect: Redirect, source: string): string {
-  return rawHeredocMarker(redirect, source).replaceAll("\\", "");
+	return rawHeredocMarker(redirect, source).replaceAll("\\", "");
 }
 
 function rawHeredocMarker(redirect: Redirect, source: string): string {
-  if (!redirect.target) return "";
-  const raw = displayWord(redirect.target, source);
-  return raw.length > 0 ? raw : (redirect.target.value ?? redirect.target.text);
+	if (!redirect.target) return "";
+	const raw = displayWord(redirect.target, source);
+	return raw.length > 0 ? raw : (redirect.target.value ?? redirect.target.text);
 }
 
 function displayWord(word: Word | undefined, source: string): string {
-  if (!word) return "";
-  const sliced = source.slice(word.pos, word.end);
-  return sliced.length > 0 ? sliced : word.text;
+	if (!word) return "";
+	const sliced = source.slice(word.pos, word.end);
+	return sliced.length > 0 ? sliced : word.text;
 }
 
-function makeTokenSpec(full: string, argMaxLength: number, min = elideToken(full, argMaxLength)) {
-  return {
-    full,
-    min,
-    shrink: (targetLength: number) => shrinkToken(full, targetLength, min),
-  };
+function makeTokenSpec(
+	full: string,
+	argMaxLength: number,
+	min = elideToken(full, argMaxLength),
+) {
+	return {
+		full,
+		min,
+		shrink: (targetLength: number) => shrinkToken(full, targetLength, min),
+	};
 }
 
 /** Elide a single argument token if warranted. */
 function elideToken(token: string, argMaxLength: number): string {
-  if (isPathToken(token)) {
-    const elided = elidePath(token);
-    return elided.length < token.length ? elided : token;
-  }
-  if (token.length > argMaxLength) {
-    return token.slice(0, argMaxLength) + "…";
-  }
-  return token;
+	if (isPathToken(token)) {
+		const elided = elidePath(token);
+		return elided.length < token.length ? elided : token;
+	}
+	if (token.length > argMaxLength) {
+		return `${token.slice(0, argMaxLength)}…`;
+	}
+	return token;
 }
 
 function shrinkToken(token: string, targetLength: number, min: string): string {
-  if (token.length <= targetLength) return token;
-  if (targetLength <= min.length) return min;
-  if (targetLength <= 1) return "…";
-  if (isPathToken(token)) return shrinkPathToken(token, targetLength);
-  return token.slice(0, targetLength - 1) + "…";
+	if (token.length <= targetLength) return token;
+	if (targetLength <= min.length) return min;
+	if (targetLength <= 1) return "…";
+	if (isPathToken(token)) return shrinkPathToken(token, targetLength);
+	return `${token.slice(0, targetLength - 1)}…`;
 }
 
 /**
@@ -166,15 +183,15 @@ function shrinkToken(token: string, targetLength: number, min: string): string {
  *     that happen to contain a slash)
  */
 function isPathToken(token: string): boolean {
-  if (!token.includes("/")) return false;
-  if (token.includes("://")) return false;
-  const inner = token.replace(/^["']|["']$/g, "");
-  const spaces = (inner.match(/ /g) ?? []).length;
-  if (spaces / inner.length > 0.1) return false;
-  const nonSpace = inner.replace(/ /g, "");
-  if (nonSpace.length === 0) return false;
-  const safe = (nonSpace.match(/[a-zA-Z0-9/._~$@%+=,:-]/g) ?? []).length;
-  return safe / nonSpace.length >= 0.85;
+	if (!token.includes("/")) return false;
+	if (token.includes("://")) return false;
+	const inner = token.replace(/^["']|["']$/g, "");
+	const spaces = (inner.match(/ /g) ?? []).length;
+	if (spaces / inner.length > 0.1) return false;
+	const nonSpace = inner.replace(/ /g, "");
+	if (nonSpace.length === 0) return false;
+	const safe = (nonSpace.match(/[a-zA-Z0-9/._~$@%+=,:-]/g) ?? []).length;
+	return safe / nonSpace.length >= 0.85;
 }
 
 /**
@@ -182,25 +199,25 @@ function isPathToken(token: string): boolean {
  * /Users/jdiamond/code/pi-unbash → /Users/…/pi-unbash
  */
 function elidePath(p: string): string {
-  const parts = p.split("/");
-  if (parts.length <= 3) return p;
-  return parts.slice(0, 2).join("/") + "/…/" + parts[parts.length - 1];
+	const parts = p.split("/");
+	if (parts.length <= 3) return p;
+	return `${parts.slice(0, 2).join("/")}/…/${parts[parts.length - 1]}`;
 }
 
 function shrinkPathToken(token: string, targetLength: number): string {
-  if (token.length <= targetLength) return token;
-  if (targetLength <= 1) return "…";
+	if (token.length <= targetLength) return token;
+	if (targetLength <= 1) return "…";
 
-  const lastSlash = token.lastIndexOf("/");
-  if (lastSlash <= 0) {
-    return token.slice(0, targetLength - 1) + "…";
-  }
+	const lastSlash = token.lastIndexOf("/");
+	if (lastSlash <= 0) {
+		return `${token.slice(0, targetLength - 1)}…`;
+	}
 
-  const suffix = token.slice(lastSlash);
-  const prefixBudget = targetLength - suffix.length - 1;
-  if (prefixBudget <= 0) {
-    return token.slice(0, targetLength - 1) + "…";
-  }
+	const suffix = token.slice(lastSlash);
+	const prefixBudget = targetLength - suffix.length - 1;
+	if (prefixBudget <= 0) {
+		return `${token.slice(0, targetLength - 1)}…`;
+	}
 
-  return token.slice(0, prefixBudget) + "…" + suffix;
+	return `${token.slice(0, prefixBudget)}…${suffix}`;
 }

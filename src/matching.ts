@@ -7,11 +7,11 @@ import type { Action } from "./types.ts";
  * but extra flags or positional args anywhere in the sequence are permitted.
  */
 export function isSubsequence(needle: string[], haystack: string[]): boolean {
-  let ni = 0;
-  for (let hi = 0; hi < haystack.length && ni < needle.length; hi++) {
-    if (haystack[hi] === needle[ni]) ni++;
-  }
-  return ni === needle.length;
+	let ni = 0;
+	for (let hi = 0; hi < haystack.length && ni < needle.length; hi++) {
+		if (haystack[hi] === needle[ni]) ni++;
+	}
+	return ni === needle.length;
 }
 
 /**
@@ -22,17 +22,17 @@ export function isSubsequence(needle: string[], haystack: string[]): boolean {
  * - `~` at start expands to home directory
  */
 export function globMatch(pattern: string, input: string): boolean {
-  // Expand ~ at the start
-  if (pattern.startsWith("~")) {
-    const home = process.env.HOME ?? "";
-    pattern = home + pattern.slice(1);
-  }
-  if (input.startsWith("~")) {
-    const home = process.env.HOME ?? "";
-    input = home + input.slice(1);
-  }
+	// Expand ~ at the start
+	if (pattern.startsWith("~")) {
+		const home = process.env.HOME ?? "";
+		pattern = home + pattern.slice(1);
+	}
+	if (input.startsWith("~")) {
+		const home = process.env.HOME ?? "";
+		input = home + input.slice(1);
+	}
 
-  return minimatch(input, pattern);
+	return minimatch(input, pattern);
 }
 
 /**
@@ -50,30 +50,30 @@ export function globMatch(pattern: string, input: string): boolean {
  * Returns undefined if no rule matches.
  */
 export function resolveBashAction(
-  commandName: string,
-  commandArgs: string[],
-  rules: Record<string, Action>,
+	commandName: string,
+	commandArgs: string[],
+	rules: Record<string, Action>,
 ): Action | undefined {
-  let result: Action | undefined;
+	let result: Action | undefined;
 
-  for (const [pattern, action] of Object.entries(rules)) {
-    if (pattern === "*") {
-      result = action;
-      continue;
-    }
+	for (const [pattern, action] of Object.entries(rules)) {
+		if (pattern === "*") {
+			result = action;
+			continue;
+		}
 
-    const tokens = pattern.split(" ");
-    const patternName = tokens[0]!;
-    const patternArgs = tokens.slice(1);
+		const tokens = pattern.split(" ");
+		const patternName = tokens[0]!;
+		const patternArgs = tokens.slice(1);
 
-    if (patternName !== commandName) continue;
+		if (patternName !== commandName) continue;
 
-    if (patternArgs.length === 0 || isSubsequence(patternArgs, commandArgs)) {
-      result = action;
-    }
-  }
+		if (patternArgs.length === 0 || isSubsequence(patternArgs, commandArgs)) {
+			result = action;
+		}
+	}
 
-  return result;
+	return result;
 }
 
 /**
@@ -85,23 +85,23 @@ export function resolveBashAction(
  * Returns undefined if no rule matches.
  */
 export function resolveGlobAction(
-  input: string,
-  rules: Record<string, Action>,
+	input: string,
+	rules: Record<string, Action>,
 ): Action | undefined {
-  let result: Action | undefined;
+	let result: Action | undefined;
 
-  for (const [pattern, action] of Object.entries(rules)) {
-    if (pattern === "*") {
-      result = action;
-      continue;
-    }
+	for (const [pattern, action] of Object.entries(rules)) {
+		if (pattern === "*") {
+			result = action;
+			continue;
+		}
 
-    if (globMatch(pattern, input)) {
-      result = action;
-    }
-  }
+		if (globMatch(pattern, input)) {
+			result = action;
+		}
+	}
 
-  return result;
+	return result;
 }
 
 /**
@@ -113,21 +113,21 @@ export function resolveGlobAction(
  * Returns undefined if no rule matches.
  */
 export function resolveExactAction(
-  input: string,
-  rules: Record<string, Action>,
+	input: string,
+	rules: Record<string, Action>,
 ): Action | undefined {
-  let result: Action | undefined;
+	let result: Action | undefined;
 
-  for (const [pattern, action] of Object.entries(rules)) {
-    if (pattern === "*") {
-      result = action;
-      continue;
-    }
+	for (const [pattern, action] of Object.entries(rules)) {
+		if (pattern === "*") {
+			result = action;
+			continue;
+		}
 
-    if (pattern === input) {
-      result = action;
-    }
-  }
+		if (pattern === input) {
+			result = action;
+		}
+	}
 
-  return result;
+	return result;
 }

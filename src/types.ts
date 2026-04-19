@@ -2,8 +2,8 @@ import type { Command } from "unbash";
 
 /** A concrete command node together with the source string its positions refer to. */
 export interface CommandRef {
-  node: Command;
-  source: string;
+	node: Command;
+	source: string;
 }
 
 /** Matcher types define how to extract and match input from a tool call. */
@@ -11,10 +11,10 @@ export type MatcherType = "bash" | "glob" | "exact";
 
 /** Defines how to extract and match input from a tool call. */
 export interface Matcher {
-  /** Tool parameter to extract (e.g., "command", "path", "url") */
-  param: string;
-  /** How to match the extracted value */
-  type: MatcherType;
+	/** Tool parameter to extract (e.g., "command", "path", "url") */
+	param: string;
+	/** How to match the extracted value */
+	type: MatcherType;
 }
 
 /** Permission actions. */
@@ -34,24 +34,24 @@ export type Profile = Rules;
 
 /** Full configuration for pi-guard. */
 export interface GuardConfig {
-  enabled: boolean;
-  matchers?: Matchers;
-  rules: Rules;
-  profiles?: Record<string, Profile>;
-  shortcuts?: Record<string, string | undefined>;
+	enabled: boolean;
+	matchers?: Matchers;
+	rules: Rules;
+	profiles?: Record<string, Profile>;
+	shortcuts?: Record<string, string | undefined>;
 }
 
 /** Result of a permission check. */
 export interface PermissionResult {
-  /** Whether to block the tool call */
-  block: boolean;
-  /** Human-readable reason for the decision */
-  reason?: string;
-  /** Context to inject into the tool result */
-  context?: string;
+	/** Whether to block the tool call */
+	block: boolean;
+	/** Human-readable reason for the decision */
+	reason?: string;
+	/** Context to inject into the tool result */
+	context?: string;
 }
 
 /** Tool call event shape for type-safe matching. */
 export interface ToolCallInput {
-  [key: string]: unknown;
+	[key: string]: unknown;
 }

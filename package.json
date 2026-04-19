@@ -1,50 +1,53 @@
 {
-  "name": "pi-guard",
-  "version": "1.2.0",
-  "description": "General-purpose permission system for pi tools, handling permissions for bash and file tools with extensible matchers for custom tools.",
-  "keywords": [
-    "pi-package",
-    "security",
-    "permissions",
-    "bash",
-    "file",
-    "guard"
-  ],
-  "author": "Jason Diamond <jason@diamond.name>",
-  "license": "MIT",
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/jdiamond/pi-guard.git"
-  },
-  "homepage": "https://github.com/jdiamond/pi-guard#readme",
-  "bugs": {
-    "url": "https://github.com/jdiamond/pi-guard/issues"
-  },
-  "files": [
-    "src",
-    "README.md"
-  ],
-  "type": "module",
-  "scripts": {
-    "test": "npm run check && node --test test/**/*.ts",
-    "check": "tsc --noEmit"
-  },
-  "pi": {
-    "extensions": [
-      "./src/index.ts"
-    ]
-  },
-  "dependencies": {
-    "minimatch": "^10.2.4",
-    "unbash": "jdiamond/unbash#combined-fixes"
-  },
-  "peerDependencies": {
-    "@mariozechner/pi-coding-agent": "*"
-  },
-  "devDependencies": {
-    "@mariozechner/pi-coding-agent": "*",
-    "@types/minimatch": "^5.1.2",
-    "@types/node": "^25",
-    "typescript": "^5.8"
-  }
+	"name": "pi-guard",
+	"version": "1.2.0",
+	"description": "General-purpose permission system for pi tools, handling permissions for bash and file tools with extensible matchers for custom tools.",
+	"keywords": [
+		"pi-package",
+		"security",
+		"permissions",
+		"bash",
+		"file",
+		"guard"
+	],
+	"author": "Jason Diamond <jason@diamond.name>",
+	"license": "MIT",
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/jdiamond/pi-guard.git"
+	},
+	"homepage": "https://github.com/jdiamond/pi-guard#readme",
+	"bugs": {
+		"url": "https://github.com/jdiamond/pi-guard/issues"
+	},
+	"files": [
+		"src",
+		"README.md"
+	],
+	"type": "module",
+	"scripts": {
+		"test": "npm run check && node --test test/**/*.ts",
+		"check": "tsc --noEmit && biome check",
+		"biome:check": "biome check",
+		"biome:fix": "biome check --write"
+	},
+	"pi": {
+		"extensions": [
+			"./src/index.ts"
+		]
+	},
+	"dependencies": {
+		"minimatch": "^10.2.4",
+		"unbash": "jdiamond/unbash#combined-fixes"
+	},
+	"peerDependencies": {
+		"@mariozechner/pi-coding-agent": "*"
+	},
+	"devDependencies": {
+		"@biomejs/biome": "2.4.11",
+		"@mariozechner/pi-coding-agent": "*",
+		"@types/minimatch": "^5.1.2",
+		"@types/node": "^25",
+		"typescript": "^5.8"
+	}
 }
