@@ -188,7 +188,7 @@ Activate it with `/guard profile read-write` and deactivate with `/guard profile
 
 ### Shortcuts
 
-Shortcuts are custom commands that execute guard subcommands, so you don't have to type `/guard profile read-write` every time:
+Shortcuts are custom commands that execute guard subcommands, so you don't have to type commands like `/guard profile read-write` every time:
 
 ```json
 {
@@ -202,14 +202,16 @@ Shortcuts are custom commands that execute guard subcommands, so you don't have 
     "shortcuts": {
       "rw": "profile read-write",
       "ro": "profile off",
-      "rules": "list",
-      "toggle": "toggle"
+      "yolo": "disable",
+      "safe": "enable"
     }
   }
 }
 ```
 
-Now `/rw` activates the read-write profile and `/ro` deactivates it. Shortcuts can reference any guard subcommand: `profile`, `list`, or `toggle`.
+Now `/rw` activates the read-write profile, `/ro` deactivates it, and `/yolo`/`/safe` quickly toggle the guard off and on.
+
+Shortcuts can reference any guard subcommand: `profile`, `list`, `toggle`, `enable`, or `disable`.
 
 ## Commands
 
@@ -218,7 +220,9 @@ Now `/rw` activates the read-write profile and `/ro` deactivates it. Shortcuts c
 Manage pi-guard security settings.
 
 ```
-/guard toggle           # Enable/disable guard
+/guard enable           # Enable guard
+/guard disable          # Disable guard
+/guard toggle           # Toggle guard on/off
 /guard list             # Show current rules
 /guard profile          # Show active profile and available profiles
 /guard profile <name>   # Activate a profile by name

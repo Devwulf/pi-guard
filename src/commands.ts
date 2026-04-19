@@ -64,6 +64,18 @@ function handleToggleCommand(context: GuardContext): string {
   return `pi-guard is now ${context.config.enabled ? "ENABLED" : "DISABLED"}`;
 }
 
+function handleEnableCommand(context: GuardContext): string {
+  context.config.enabled = true;
+  saveConfig(context.config);
+  return "pi-guard is now ENABLED";
+}
+
+function handleDisableCommand(context: GuardContext): string {
+  context.config.enabled = false;
+  saveConfig(context.config);
+  return "pi-guard is now DISABLED";
+}
+
 function buildListOutput(context: GuardContext, cwd: string): string {
   const enabled = context.config.enabled ? "ENABLED" : "DISABLED";
   const profiles = context.config.profiles ?? {};
@@ -115,6 +127,14 @@ export function handleGuardCommand(
     return { message: handleToggleCommand(context), type: "info" };
   }
 
+  if (action === "enable") {
+    return { message: handleEnableCommand(context), type: "info" };
+  }
+
+  if (action === "disable") {
+    return { message: handleDisableCommand(context), type: "info" };
+  }
+
   if (action === "profile") {
     return handleProfileCommand(context, target);
   }
@@ -123,5 +143,5 @@ export function handleGuardCommand(
     return { message: buildListOutput(context, cwd), type: "info" };
   }
 
-  return { message: "Usage: /guard <toggle|profile|list>", type: "warning" };
+  return { message: "Usage: /guard <toggle|enable|disable|profile|list>", type: "warning" };
 }

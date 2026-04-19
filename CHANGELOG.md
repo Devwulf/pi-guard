@@ -11,6 +11,8 @@ All notable changes to this project will be documented in this file.
 - `/guard profile` — Show active profile and available profiles
 - `/guard profile <name>` — Activate a profile by name
 - `/guard profile off` — Deactivate current profile
+- `/guard enable` — Enable guard
+- `/guard disable` — Disable guard
 
 ### Changed
 
