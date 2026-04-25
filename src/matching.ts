@@ -2,14 +2,28 @@ import { minimatch } from "minimatch";
 import type { Action } from "./types.ts";
 
 /**
+ * Check if a single needle token matches a haystack token.
+ * Tokens containing `*` or `?` are matched as globs; otherwise exact match.
+ */
+function tokenMatches(needle: string, haystack: string): boolean {
+	if (needle.includes("*") || needle.includes("?")) {
+		return globMatch(needle, haystack);
+	}
+	return needle === haystack;
+}
+
+/**
  * Check if `needle` tokens appear in order within `haystack`.
  * Used for bash command matching where rule tokens must appear in order,
  * but extra flags or positional args anywhere in the sequence are permitted.
+ * Tokens containing `*` or `?` are matched as globs against haystack tokens.
  */
 export function isSubsequence(needle: string[], haystack: string[]): boolean {
 	let ni = 0;
-	for (let hi = 0; hi < haystack.length && ni < needle.length; hi++) {
-		if (haystack[hi] === needle[ni]) ni++;
+	for (const token of haystack) {
+		if (ni >= needle.length) break;
+		const pattern = needle[ni];
+		if (pattern !== undefined && tokenMatches(pattern, token)) ni++;
 	}
 	return ni === needle.length;
 }

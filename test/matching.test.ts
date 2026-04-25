@@ -273,6 +273,84 @@ test("resolveBashAction", async (t) => {
 		assert.equal(resolveBashAction("git", ["status"], rules), "allow");
 		assert.equal(resolveBashAction("git", ["push"], rules), "deny");
 	});
+
+	await t.test(
+		"find allow overrides find -exec ask via last-match-wins",
+		() => {
+			const rules = { find: "allow" as const, "find -exec": "ask" as const };
+			assert.equal(resolveBashAction("find", ["."], rules), "allow");
+			assert.equal(
+				resolveBashAction("find", [".", "-exec", "rm", "{}", "\\;"], rules),
+				"ask",
+			);
+			assert.equal(
+				resolveBashAction(
+					"find",
+					[".", "-name", "*.ts", "-exec", "rm", "{}", "\\;"],
+					rules,
+				),
+				"ask",
+			);
+		},
+	);
+
+	await t.test("glob pattern in command args — sed in-place flags", () => {
+		const rules = {
+			sed: "allow" as const,
+			"sed --in-place*": "ask" as const,
+			"sed -i*": "ask" as const,
+			"sed -I*": "ask" as const,
+		};
+		// bare sed: allow
+		assert.equal(
+			resolveBashAction("sed", ["s/foo/bar/", "file.txt"], rules),
+			"allow",
+		);
+		// sed -E: allow (no in-place flag)
+		assert.equal(
+			resolveBashAction("sed", ["-E", "s/foo/bar/", "file.txt"], rules),
+			"allow",
+		);
+		// sed -i: ask (-i matches -i*)
+		assert.equal(
+			resolveBashAction("sed", ["-i", "s/foo/bar/", "file.txt"], rules),
+			"ask",
+		);
+		// sed -i .bak: ask
+		assert.equal(
+			resolveBashAction("sed", ["-i", ".bak", "s/foo/bar/", "file.txt"], rules),
+			"ask",
+		);
+		// sed -i.bak: ask
+		assert.equal(
+			resolveBashAction("sed", ["-i.bak", "s/foo/bar/", "file.txt"], rules),
+			"ask",
+		);
+		// sed -I: ask (BSD/macOS synonym)
+		assert.equal(
+			resolveBashAction("sed", ["-I", "s/foo/bar/", "file.txt"], rules),
+			"ask",
+		);
+		// sed -I.bak: ask
+		assert.equal(
+			resolveBashAction("sed", ["-I.bak", "s/foo/bar/", "file.txt"], rules),
+			"ask",
+		);
+		// sed --in-place: ask
+		assert.equal(
+			resolveBashAction("sed", ["--in-place", "s/foo/bar/", "file.txt"], rules),
+			"ask",
+		);
+		// sed --in-place=bak: ask
+		assert.equal(
+			resolveBashAction(
+				"sed",
+				["--in-place=bak", "s/foo/bar/", "file.txt"],
+				rules,
+			),
+			"ask",
+		);
+	});
 });
 
 test("resolveGlobAction", async (t) => {

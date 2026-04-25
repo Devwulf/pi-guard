@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file.
 
+## [Unreleased]
+
+### Added
+- Glob patterns (`*` and `?`) in bash command rule tokens — e.g., `"sed -i*": "ask"` matches `-i`, `-i.bak`, and any other `-i` variant.
+- Default rules: `sed` is allowed; `sed -i*`, `sed -I*`, and `sed --in-place*` (in-place edits) require approval.
+
+### Changed
+- `isSubsequence` now supports glob wildcards in tokens (via `minimatch`) instead of exact string matching only.
+
 ## [1.3.0] - 2026-04-25
 
 ### Fixed
