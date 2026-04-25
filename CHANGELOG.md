@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 ## [Unreleased]
 
 ### Added
+- **Pipeline and redirect operators in approval prompts** — Commands connected by `|`, `&&`, `||`, or `;` now show the operator at the end of each line. Commands from different structural contexts (e.g., outer command vs. subshell expansion) are separated by blank lines. Previously these operators were silently dropped.
+  ```
+  ✖ cat foo |
+  ✔ grep bar |
+  ✖ wc -l
+  ```
 - **Wrapper command expansion** — Commands like `xargs`, `sudo`, `bash -c`, `find -exec`, and `fd -x` that embed sub-commands are now expanded and each sub-command is independently checked against rules. For example, `xargs rm` is now checked as both `xargs` (allowed) and `rm` (ask). Nested wrappers are also handled (`sudo xargs rm` → checks `rm` through both).
 - Wrapper display in approval prompts — Expanded wrapper commands show `...` in place of the sub-command to avoid redundancy. For example, `xargs rm` displays as `xargs ...` with `rm` shown separately.
 - `xargs` and `fd` added to default allow rules — safe wrappers whose sub-commands are independently checked.
