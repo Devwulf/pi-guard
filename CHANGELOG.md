@@ -2,11 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
-## [Unreleased]
+## [1.3.0] - 2026-04-25
 
 ### Fixed
 
 - `globMatch` now matches dot files (e.g., `*.env` matches `.env`) thanks to @tdiam
+- `pi install npm:pi-guard` now works — `unbash` is a proper npm dependency instead of a Git target, fixing install failures where `tsc` wasn't available (#2)
 
 ### Changed
 
