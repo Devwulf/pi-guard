@@ -69,23 +69,7 @@ export function formatCommand(
 	const fullDisplay = [name, ...tokenSpecs.map((spec) => spec.full)].join(" ");
 	if (fullDisplay.length <= maxLength) return fullDisplay;
 
-	const tokens = tokenSpecs.map((spec) => spec.full);
-	let overflow = fullDisplay.length - maxLength;
-
-	for (let i = tokenSpecs.length - 1; i >= 0 && overflow > 0; i--) {
-		const spec = tokenSpecs[i];
-		const current = tokens[i];
-		if (!spec || !current) continue;
-		const maxShrink = current.length - spec.min.length;
-		if (maxShrink <= 0) continue;
-
-		const nextTargetLength = current.length - Math.min(maxShrink, overflow);
-		const shrunk = spec.shrink(nextTargetLength);
-		tokens[i] = shrunk;
-		overflow -= current.length - shrunk.length;
-	}
-
-	return truncate([name, ...tokens].join(" "), maxLength);
+	return shrinkTokens([name], tokenSpecs, fullDisplay, maxLength);
 }
 
 function isRenderableHeredoc(redirect: Redirect): boolean {
@@ -262,6 +246,41 @@ function shrinkToken(token: string, targetLength: number, min: string): string {
 }
 
 /**
+ * Shrink tokens from right to left until the combined display fits within
+ * maxLength. Each token is shrunk only as much as needed, and never below
+ * its minimum (elided) length. head strings (name, assignments, etc.) are
+ * never shrunk — only the tokenSpecs are.
+ */
+function shrinkTokens(
+	head: string[],
+	tokenSpecs: {
+		full: string;
+		min: string;
+		shrink: (targetLength: number) => string;
+	}[],
+	fullDisplay: string,
+	maxLength: number,
+): string {
+	const tokens = tokenSpecs.map((spec) => spec.full);
+	let overflow = fullDisplay.length - maxLength;
+
+	for (let i = tokenSpecs.length - 1; i >= 0 && overflow > 0; i--) {
+		const spec = tokenSpecs[i];
+		const current = tokens[i];
+		if (!spec || !current) continue;
+		const maxShrink = current.length - spec.min.length;
+		if (maxShrink <= 0) continue;
+
+		const nextTargetLength = current.length - Math.min(maxShrink, overflow);
+		const shrunk = spec.shrink(nextTargetLength);
+		tokens[i] = shrunk;
+		overflow -= current.length - shrunk.length;
+	}
+
+	return truncate([...head, ...tokens].join(" "), maxLength);
+}
+
+/**
  * Path-like detection using character composition.
  * A token is considered path-like if:
  *   - It contains a slash (required)
@@ -297,24 +316,7 @@ function formatAssignmentOnlyCommand(
 	].join(" ");
 	if (fullDisplay.length <= maxLength) return fullDisplay;
 
-	// Shrink redirect tokens first, then assignments
-	const tokens = tokenSpecs.map((spec) => spec.full);
-	let overflow = fullDisplay.length - maxLength;
-
-	for (let i = tokens.length - 1; i >= 0 && overflow > 0; i--) {
-		const spec = tokenSpecs[i];
-		const current = tokens[i];
-		if (!spec || !current) continue;
-		const maxShrink = current.length - spec.min.length;
-		if (maxShrink <= 0) continue;
-
-		const nextTargetLength = current.length - Math.min(maxShrink, overflow);
-		const shrunk = spec.shrink(nextTargetLength);
-		tokens[i] = shrunk;
-		overflow -= current.length - shrunk.length;
-	}
-
-	return truncate([...assignments, ...tokens].join(" "), maxLength);
+	return shrinkTokens(assignments, tokenSpecs, fullDisplay, maxLength);
 }
 
 /** Format a single prefix assignment (e.g. "TOKEN=$(...)" or "FOO=bar"). */
