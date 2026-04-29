@@ -53,16 +53,16 @@ export function formatCommand(
 				/\n/g,
 				"↵",
 			);
-			return makeTokenSpec(full, argMaxLength);
+			return { full, min: elideToken(full, argMaxLength) };
 		}),
 		...cmd.node.redirects.map((redirect) => {
 			if (isRenderableHeredoc(redirect)) {
 				const full = renderFullHeredoc(redirect, cmd.source);
 				const min = renderElidedHeredoc(redirect, cmd.source, argMaxLength);
-				return makeTokenSpec(full, argMaxLength, min);
+				return { full, min };
 			}
 			const full = renderRedirect(redirect, cmd.source).replace(/\n/g, "↵");
-			return makeTokenSpec(full, argMaxLength);
+			return { full, min: elideToken(full, argMaxLength) };
 		}),
 	];
 
@@ -214,14 +214,6 @@ function reconstructQuotedExpansion(
 	return `$"${inner}"`;
 }
 
-function makeTokenSpec(
-	full: string,
-	argMaxLength: number,
-	min = elideToken(full, argMaxLength),
-): { full: string; min: string } {
-	return { full, min };
-}
-
 function elideToken(token: string, argMaxLength: number): string {
 	if (isPathToken(token)) {
 		const elided = elidePath(token);
@@ -296,10 +288,10 @@ function formatAssignmentOnlyCommand(
 		if (isRenderableHeredoc(redirect)) {
 			const full = renderFullHeredoc(redirect, cmd.source);
 			const min = renderElidedHeredoc(redirect, cmd.source, argMaxLength);
-			return makeTokenSpec(full, argMaxLength, min);
+			return { full, min };
 		}
 		const full = renderRedirect(redirect, cmd.source).replace(/\n/g, "↵");
-		return makeTokenSpec(full, argMaxLength);
+		return { full, min: elideToken(full, argMaxLength) };
 	});
 
 	const fullDisplay = [
