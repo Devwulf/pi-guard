@@ -10,8 +10,8 @@ import type {
 } from "unbash";
 import type { CommandRef } from "./types.ts";
 
-export const FORMAT_COMMAND_DEFAULT_MAX_LENGTH = 120;
-export const FORMAT_COMMAND_DEFAULT_ARG_MAX_LENGTH = 40;
+const FORMAT_COMMAND_DEFAULT_MAX_LENGTH = 120;
+const FORMAT_COMMAND_DEFAULT_ARG_MAX_LENGTH = 40;
 
 export function truncate(s: string, maxLength: number): string {
 	return s.length > maxLength ? `${s.slice(0, maxLength - 1)}…` : s;
@@ -307,7 +307,11 @@ function formatAssignmentOnlyCommand(
 	const assignments = cmd.node.prefix.map((a) =>
 		formatAssignment(a, cmd.source).replace(/\n/g, "↵"),
 	);
-	const tokenSpecs = redirectsToTokenSpecs(cmd.node.redirects, cmd.source, argMaxLength);
+	const tokenSpecs = redirectsToTokenSpecs(
+		cmd.node.redirects,
+		cmd.source,
+		argMaxLength,
+	);
 
 	const fullDisplay = [
 		...assignments,
