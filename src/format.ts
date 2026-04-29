@@ -218,12 +218,8 @@ function makeTokenSpec(
 	full: string,
 	argMaxLength: number,
 	min = elideToken(full, argMaxLength),
-): { full: string; min: string; shrink: (targetLength: number) => string } {
-	return {
-		full,
-		min,
-		shrink: (targetLength: number) => shrinkToken(full, targetLength, min),
-	};
+): { full: string; min: string } {
+	return { full, min };
 }
 
 function elideToken(token: string, argMaxLength: number): string {
@@ -253,11 +249,7 @@ function shrinkToken(token: string, targetLength: number, min: string): string {
  */
 function shrinkTokens(
 	head: string[],
-	tokenSpecs: {
-		full: string;
-		min: string;
-		shrink: (targetLength: number) => string;
-	}[],
+	tokenSpecs: { full: string; min: string }[],
 	fullDisplay: string,
 	maxLength: number,
 ): string {
@@ -272,7 +264,7 @@ function shrinkTokens(
 		if (maxShrink <= 0) continue;
 
 		const nextTargetLength = current.length - Math.min(maxShrink, overflow);
-		const shrunk = spec.shrink(nextTargetLength);
+		const shrunk = shrinkToken(spec.full, nextTargetLength, spec.min);
 		tokens[i] = shrunk;
 		overflow -= current.length - shrunk.length;
 	}
