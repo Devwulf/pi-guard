@@ -206,6 +206,7 @@ export default function (pi: ExtensionAPI) {
 
 		if (result?.block && result.reason.includes("What would you like Pi to do?")) {
 			context.halted = true;
+			ctx.abort();
 		}
 
 		return result;
