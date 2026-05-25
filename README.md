@@ -10,7 +10,7 @@ pi-guard intercepts tool calls and prompts for approval before executing potenti
 
 ### Halt on reject
 
-When the user rejects any tool call, the agent is immediately halted — all subsequent tool calls are blocked with the message "User rejected. What would you like Pi to do?" This prevents the LLM from working around a rejection by trying alternative approaches (e.g., using `cat > file` after `write` is rejected). The halt clears automatically when you send your next message, so you can simply tell the agent what to do instead. You can also run `/guard resume` to clear it manually without sending a message.
+When the user rejects any tool call, the agent loop is immediately aborted via `ctx.abort()` — the LLM cannot generate any further text or tool calls. All subsequent tool calls are also blocked until the user sends a new message. This prevents the LLM from working around a rejection by trying alternative approaches (e.g., using `cat > file` after `write` is rejected). The halt clears automatically when you send your next message, so you can simply tell the agent what to do instead. You can also run `/guard resume` to clear it manually without sending a message.
 
 ### Output redirect detection
 
@@ -20,7 +20,7 @@ Commands with output redirects (`>`, `>>`, `>|`, `&>`, `&>>`) are now treated as
 
 - **Bash command matching** — Parses shell commands with an AST parser, handles pipes, subshells, wrapper commands (`sudo`, `xargs`, `bash -c`, `find -exec`), and supports glob tokens in rules
 - **Output redirect detection** — Commands with `>`, `>>`, etc. require approval even if the base command is allowed
-- **Halt on reject** — Agent stops immediately when the user rejects, preventing workarounds
+- **Halt on reject** — Agent loop aborted immediately on rejection, preventing workarounds
 - **Path matching** — Glob patterns for file read/write/edit permissions
 - **Extensible** — Add matchers for any tool with `exact`, `glob`, or `bash` matching
 - **Sensible defaults** — Reading is safe, writing is dangerous. Works out of the box
