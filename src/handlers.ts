@@ -211,7 +211,7 @@ async function handleToolApproval(
 	if (choice !== "Allow") {
 		return {
 			block: true,
-			reason: "[Blocked by pi-guard: User rejected this invocation]",
+			reason: "[Blocked by pi-guard: User rejected. What would you like Pi to do?]",
 		};
 	}
 }
