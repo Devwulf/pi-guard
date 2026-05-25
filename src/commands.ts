@@ -5,6 +5,7 @@ export interface GuardContext {
 	config: GuardConfig;
 	activeProfile: string | undefined;
 	sessionRules: Record<string, Record<string, Action>>;
+	halted: boolean;
 }
 
 export function parseGuardArgs(args: string): {
@@ -184,12 +185,17 @@ export function handleGuardCommand(
 		return handleProfileCommand(context, target);
 	}
 
+	if (action === "resume") {
+		context.halted = false;
+		return { message: "pi-guard resumed. Tool calls are no longer blocked.", type: "info" };
+	}
+
 	if (action === "list") {
 		return { message: buildListOutput(context, cwd), type: "info" };
 	}
 
 	return {
-		message: "Usage: /guard <toggle|enable|disable|profile|list>",
+		message: "Usage: /guard <toggle|enable|disable|profile|list|resume>",
 		type: "warning",
 	};
 }

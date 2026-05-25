@@ -1,12 +1,26 @@
-# pi-guard
+# pi-guard (fork)
 
 **Permission system for [pi](https://github.com/mariozechner/pi-coding-agent) tools**
 
+Fork of [jdiamond/pi-guard](https://github.com/jdiamond/pi-guard) with additional safety features.
+
 pi-guard intercepts tool calls and prompts for approval before executing potentially dangerous operations. It provides fine-grained, pattern-based permissions for bash commands, file access, and any custom tool — with sensible defaults that let you start safely.
+
+## Fork additions
+
+### Halt on reject
+
+When the user rejects any tool call, the agent is immediately halted — all subsequent tool calls are blocked with the message "User rejected. What would you like Pi to do?" until the user runs `/guard resume`. This prevents the LLM from working around a rejection by trying alternative approaches (e.g., using `cat > file` after `write` is rejected).
+
+### Output redirect detection
+
+Commands with output redirects (`>`, `>>`, `>|`, `&>`, `&>>`) are now treated as write operations regardless of the command's own permission. For example, `cat > file.txt` will require approval even though `cat` is in the default allow list. This closes the loophole where an LLM could bypass `write: "ask"` by writing files through bash redirects.
 
 ## Features
 
 - **Bash command matching** — Parses shell commands with an AST parser, handles pipes, subshells, wrapper commands (`sudo`, `xargs`, `bash -c`, `find -exec`), and supports glob tokens in rules
+- **Output redirect detection** — Commands with `>`, `>>`, etc. require approval even if the base command is allowed
+- **Halt on reject** — Agent stops immediately when the user rejects, preventing workarounds
 - **Path matching** — Glob patterns for file read/write/edit permissions
 - **Extensible** — Add matchers for any tool with `exact`, `glob`, or `bash` matching
 - **Sensible defaults** — Reading is safe, writing is dangerous. Works out of the box
@@ -348,3 +362,4 @@ Shortcuts can reference any guard subcommand: `profile`, `list`, `toggle`, `enab
 | `/guard profile` | Show active profile and available profiles |
 | `/guard profile <name>` | Activate a profile |
 | `/guard profile off` | Deactivate current profile |
+| `/guard resume` | Resume after a rejection (clears halt state) |

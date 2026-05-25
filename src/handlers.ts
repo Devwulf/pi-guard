@@ -101,7 +101,7 @@ async function handleBashParseFailure(
 	if (!confirmed) {
 		return {
 			block: true,
-			reason: `[Blocked by pi-guard: User rejected this invocation]`,
+			reason: `[Blocked by pi-guard: User rejected. What would you like Pi to do?]`,
 		};
 	}
 }
@@ -115,7 +115,8 @@ function findUnauthorizedCommands(
 		if (isBareAssignment(cmd)) continue;
 		const name = getCommandName(cmd);
 		const args = getCommandArgs(cmd);
-		if (resolveBashAction(name, args, toolRules) !== "allow") {
+		const action = resolveBashAction(name, args, toolRules);
+		if (action !== "allow" || cmd.hasOutputRedirect) {
 			unauthorized.push(cmd);
 		}
 	}
@@ -177,7 +178,7 @@ async function handleInteractiveBash(
 	if (choice !== "Allow") {
 		return {
 			block: true,
-			reason: `[Blocked by pi-guard: User rejected this invocation]`,
+			reason: `[Blocked by pi-guard: User rejected. What would you like Pi to do?]`,
 		};
 	}
 }

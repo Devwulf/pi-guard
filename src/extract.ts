@@ -7,6 +7,7 @@ import type {
 	ParameterExpansionPart,
 	ProcessSubstitutionPart,
 	Redirect,
+	RedirectOperator,
 	Script,
 	TestExpression,
 	Word,
@@ -16,6 +17,14 @@ import { parse as parseBash } from "unbash";
 import type { CommandRef } from "./types.ts";
 
 export type { CommandRef };
+
+const OUTPUT_REDIRECT_OPS: Set<RedirectOperator> = new Set([
+	">", ">>", ">|", "&>", "&>>",
+]);
+
+export function isOutputRedirect(op: RedirectOperator): boolean {
+	return OUTPUT_REDIRECT_OPS.has(op);
+}
 
 /** Mutable context for tracking group IDs during extraction. */
 export interface ExtractCtx {
@@ -184,12 +193,22 @@ function collectRemaining(
 	ctx: ExtractCtx,
 ) {
 	switch (node.type) {
-		case "Statement":
+		case "Statement": {
+			const stmtStartIdx = commands.length;
 			collectNode(node.command, source, commands, groupId, ctx);
+			const hasOutRedir = node.redirects.some(
+				(r: Redirect) => isOutputRedirect(r.operator),
+			);
+			if (hasOutRedir) {
+				for (let i = stmtStartIdx; i < commands.length; i++) {
+					commands[i]!.hasOutputRedirect = true;
+				}
+			}
 			for (const redirect of node.redirects) {
 				collectRedirect(redirect, source, commands, groupId, ctx);
 			}
 			return;
+		}
 
 		case "Command":
 			collectCommand(node, source, commands, groupId, ctx);
@@ -252,8 +271,14 @@ function collectCommand(
 	groupId: number,
 	ctx: ExtractCtx,
 ) {
+	const hasOutRedir = node.redirects.some(
+		(r: Redirect) => isOutputRedirect(r.operator),
+	);
+
 	if (node.name || node.prefix.length > 0) {
-		commands.push({ node, source, group: groupId });
+		const ref: CommandRef = { node, source, group: groupId };
+		if (hasOutRedir) ref.hasOutputRedirect = true;
+		commands.push(ref);
 	}
 
 	for (const prefix of node.prefix) {

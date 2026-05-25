@@ -10,6 +10,8 @@ export interface CommandRef {
 	/** The operator connecting this command to the next ("|", "&&", "||", or ";").
 	 * Undefined for the last command in a group. */
 	joiner?: "|" | "&&" | "||" | ";";
+	/** True if this command has an output redirect (>, >>, >|, &>, &>>). */
+	hasOutputRedirect?: boolean;
 }
 
 /** Matcher types define how to extract and match input from a tool call. */

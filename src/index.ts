@@ -148,6 +148,7 @@ export default function (pi: ExtensionAPI) {
 		config: loaded.config,
 		activeProfile: undefined,
 		sessionRules: {},
+		halted: false,
 	};
 
 	// Register shortcut commands
@@ -178,6 +179,10 @@ export default function (pi: ExtensionAPI) {
 	pi.on("tool_call", async (event, ctx) => {
 		if (!context.config.enabled) return;
 
+		if (context.halted) {
+			return block("User rejected. What would you like Pi to do?");
+		}
+
 		const effectiveRules = getEffectiveRulesForEvent(
 			userRules,
 			projectRules,
@@ -185,7 +190,7 @@ export default function (pi: ExtensionAPI) {
 			context,
 		);
 
-		return handleToolCall(
+		const result = await handleToolCall(
 			pi,
 			event.toolName,
 			event.input as ToolCallInput,
@@ -193,5 +198,11 @@ export default function (pi: ExtensionAPI) {
 			ctx,
 			context,
 		);
+
+		if (result?.block && result.reason.includes("What would you like Pi to do?")) {
+			context.halted = true;
+		}
+
+		return result;
 	});
 }
