@@ -10,7 +10,7 @@ pi-guard intercepts tool calls and prompts for approval before executing potenti
 
 ### Halt on reject
 
-When the user rejects any tool call, the agent is immediately halted — all subsequent tool calls are blocked with the message "User rejected. What would you like Pi to do?" until the user runs `/guard resume`. This prevents the LLM from working around a rejection by trying alternative approaches (e.g., using `cat > file` after `write` is rejected).
+When the user rejects any tool call, the agent is immediately halted — all subsequent tool calls are blocked with the message "User rejected. What would you like Pi to do?" This prevents the LLM from working around a rejection by trying alternative approaches (e.g., using `cat > file` after `write` is rejected). The halt clears automatically when you send your next message, so you can simply tell the agent what to do instead. You can also run `/guard resume` to clear it manually without sending a message.
 
 ### Output redirect detection
 

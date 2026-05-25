@@ -175,6 +175,11 @@ export default function (pi: ExtensionAPI) {
 		},
 	});
 
+	// Clear halt when the user sends a new message
+	pi.on("input", () => {
+		context.halted = false;
+	});
+
 	// The core interception hook
 	pi.on("tool_call", async (event, ctx) => {
 		if (!context.config.enabled) return;
